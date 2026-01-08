@@ -2,8 +2,9 @@ package io.github.foundationgames.animatica.config;
 
 import io.github.foundationgames.animatica.Animatica;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.OptionInstance;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.SimpleOption;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,7 +15,7 @@ public class AnimaticaConfig {
 
     public static final String FILE_NAME = "animatica.properties";
 
-    private final OptionInstance<Boolean> animatedTexturesOption;
+    private final SimpleOption<Boolean> animatedTexturesOption;
     public boolean animatedTextures;
 
     public AnimaticaConfig() {
@@ -24,7 +25,7 @@ public class AnimaticaConfig {
             Animatica.LOG.error("Error loading config during initialization!", e);
         }
 
-        this.animatedTexturesOption = OptionInstance.createBoolean(
+        this.animatedTexturesOption = SimpleOption.ofBoolean(
                 "option.animatica.animated_textures",
                 this.animatedTextures,
                 value -> {
@@ -32,7 +33,7 @@ public class AnimaticaConfig {
                     try {
                         this.save();
                     } catch (IOException e) { Animatica.LOG.error("Error saving config while changing in game!", e); }
-                    Minecraft.getInstance().reloadResourcePacks();
+                    MinecraftClient.getInstance().reloadResources();
                 }
         );
     }
@@ -54,7 +55,7 @@ public class AnimaticaConfig {
         return file;
     }
 
-    public OptionInstance<Boolean> getAnimatedTexturesOption() {
+    public SimpleOption<Boolean> getAnimatedTexturesOption() {
         return animatedTexturesOption;
     }
 

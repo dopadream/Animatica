@@ -4,10 +4,10 @@ import io.github.foundationgames.animatica.Animatica;
 import io.github.foundationgames.animatica.util.Flags;
 import io.github.foundationgames.animatica.util.exception.PropertyParseException;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
-import net.minecraft.client.Minecraft;
-import net.minecraft.resources.Identifier;
-import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.resource.Resource;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -35,7 +35,7 @@ public final class AnimationLoader implements SimpleSynchronousResourceReloadLis
 
     private static void findAllMCPAnimations(ResourceManager manager, BiConsumer<Identifier, Resource> action) {
         for (var path : ANIM_PATHS) {
-            manager.listResources(path, p -> p.getPath().endsWith(".properties")).forEach(action);
+            manager.findResources(path, p -> p.getPath().endsWith(".properties")).forEach(action);
         }
     }
 
@@ -49,7 +49,7 @@ public final class AnimationLoader implements SimpleSynchronousResourceReloadLis
     }
 
     @Override
-    public void onResourceManagerReload(ResourceManager manager) {
+    public void reload(ResourceManager manager) {
         this.animationIds.clear();
 
         if (!Animatica.CONFIG.animatedTextures) {
@@ -62,7 +62,7 @@ public final class AnimationLoader implements SimpleSynchronousResourceReloadLis
 
         findAllMCPAnimations(manager, (id, resource) -> {
             try {
-                try (var resourceInputStream = resource.open()) {
+                try (var resourceInputStream = resource.getInputStream()) {
                     var ppt = new Properties();
                     ppt.load(resourceInputStream);
 
@@ -80,9 +80,9 @@ public final class AnimationLoader implements SimpleSynchronousResourceReloadLis
         for (var targetId : animations.keySet()) {
             AnimatedTexture.tryCreate(manager, targetId, animations.get(targetId))
                     .ifPresent(tex -> {
-                        var animId = Identifier.fromNamespaceAndPath(targetId.getNamespace(), targetId.getPath() + "-anim");
+                        var animId = Identifier.of(targetId.getNamespace(), targetId.getPath() + "-anim");
                         this.animationIds.put(targetId, animId);
-                        Minecraft.getInstance().getTextureManager().register(animId, tex);
+                        MinecraftClient.getInstance().getTextureManager().registerTexture(animId, tex);
                     });
         }
 
